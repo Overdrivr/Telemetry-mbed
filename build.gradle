@@ -1,0 +1,89 @@
+task copyToMbedDistribution(type: Copy) {
+  def d = new File('dist/mbed/c_api/')
+  d.mkdirs()
+
+  from '/src/crc16/c/','/src/crc16/headers/','/src/framing/c/',
+  '/src/framing/headers/','/src/telemetry/c/', '/src/telemetry/headers/',
+  './version/','./src/dictionnary/c/','./src/dictionnary/headers/'
+  into 'dist/mbed/c_api/'
+  rename { String fileName ->
+        fileName.replace('.c', '.cpp')
+    }
+  include '**.c','**.h'
+}
+
+
+task copyMbedInterfaceAndDriver(type: Copy) {
+  from '/interfaces/cpp/','/drivers/cpp/mbed/','./configs/mbed/'
+  into 'dist/mbed/'
+  include '**.c','**.h','**.cpp','**.hpp'
+}
+
+task distributeMbed() {
+  dependsOn << copyToMbedDistribution
+  dependsOn << copyMbedInterfaceAndDriver
+}
+
+//TODO : add version to the zip
+task packMbed(type: Zip){
+  dependsOn << distributeMbed
+  from './dist/mbed/'
+  into './Telemetry/'
+  archiveName 'Telemetry-mbed.zip'
+}
+
+model {
+  component {
+    bufferedSerialMock(NativeLibrarySpec) {
+      sources {
+        cpp {
+          source {
+             srcDirs "mocks/cpp/bufferedserial/"
+             include "BufferedSerial.c"
+          }
+          exportedHeaders {
+            srcDirs "mocks/cpp/bufferedserial/"
+            include "BufferedSerial.h"
+          }
+        }
+      }
+    }
+
+    mbedDistribution(NativeLibrarySpec) {
+      binaries.all {
+        lib library: "bufferedSerialMock"
+      }
+      sources {
+        cpp {
+          source {
+             srcDirs "dist/mbed/"
+             include "**/*.c", "**/*.cpp"
+          }
+          exportedHeaders {
+            srcDirs "dist/mbed/"
+            include "**/*.h", "**/*.hpp"
+          }
+        }
+      }
+    }
+
+    mbedTest(NativeExecutableSpec) {
+      binaries.all {
+        lib library: "bufferedSerialMock"
+        lib library: "mbedDistribution"
+      }
+      sources {
+        cpp {
+          source {
+             srcDirs "integration_tests/cpp/mbed/"
+             include "**/*.cpp"
+          }
+          exportedHeaders {
+            srcDirs "integration_tests/cpp/mbed/"
+            include "**/*.hpp"
+          }
+        }
+      }
+    }
+  }
+}
