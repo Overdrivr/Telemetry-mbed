@@ -1,5 +1,5 @@
 #include "Telemetry.hpp"
-#include "c_api/telemetry_core.h"
+#include "core/telemetry_core.h"
 #include "BufferedSerial.h"
 
 static BufferedSerial pc(USBTX, USBRX);
@@ -73,11 +73,6 @@ void Telemetry::attach_i32_to(const char * topic, int32_t * variable)
     attach_i32(topic, variable);
 }
 
-void Telemetry::begin(uint32_t bauds)
-{
-    pc.baud(bauds);
-}
-
 TM_transport * Telemetry::get_transport()
 {
   return &transport;
@@ -131,5 +126,5 @@ void Telemetry::sub(void (*callback)(TM_state * s, TM_msg * m),
 
 void Telemetry::update()
 {
-    update_telemetry(0);
+    update_telemetry();
 }
