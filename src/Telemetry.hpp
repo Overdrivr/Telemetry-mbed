@@ -2,23 +2,13 @@
 #define TELEMETRY_HPP_
 
 #include "telemetry_config.h"
-
-#ifdef TELEMETRY_ARDUINO_DISTRIBUTION
-#include "telemetry_utils.h"
-#else
-#include "c_api/telemetry_utils.h"
-#endif
+#include "core/telemetry_utils.h"
 
 class Telemetry
 {
     public:
-#ifdef TELEMETRY_ARDUINO_DISTRIBUTION
-      Telemetry();
-#else
-      Telemetry(uint32_t bauds = 9600);
-#endif
 
-      void begin(uint32_t bauds = 9600);
+      Telemetry(uint32_t bauds = 9600);
 
       //void attach_to(const char * topic, );
       void attach_f32_to(const char * topic, float * variable);
